@@ -1,6 +1,4 @@
-# PyClim: PyClim produces a range of graphs and statistics to support the analysis of climate
-# data, to support architectural / engineering / technology students to develop their
-# early-stage bioclimatic design concepts. PyClim is organised arounnd a suite of modules:
+# PyClim: PyClim produces a range of graphs and statistics to support the analysis of climate data, to support architectural / engineering / technology students to develop their early-stage bioclimatic design concepts. PyClim is organised arounnd a suite of modules:
 
 - ClimAnalFunctions: functions relating to solar geometry, psychrometry and illumination.
 - Psychros: creates psychrometric charts for the plotting ot climate data {and of transformed data to mimic evaporative cooling}
