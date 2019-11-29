@@ -15,14 +15,14 @@ import numpy as np
 
 from ClimAnalFunctions import * 
 
-lat = 53
+lat = 75
 lat = lat*pi/180
 
+AzimuthIncrement = 10
 HorizontalProtractor = False
 VerticalProtractor = False
 WallAzimuth = 235
-ClockTime = True
-EqTonly = True
+ClockTime = False
 
 circles_x = []
 circles_y = []
@@ -51,7 +51,7 @@ plt.figure(figsize=(9, 9))
 #######################################
 
 for circle in range (90,0,-10):
-    for orientation in range (0,370,10):
+    for orientation in range (0,360+AzimuthIncrement, AzimuthIncrement):
         circles_x.append(circle*math.sin(orientation*pi/180))
         circles_y.append(circle*math.cos(orientation*pi/180))
         if circle==80:
@@ -71,18 +71,7 @@ for circle in range (90,0,-10):
     spokes_x.clear()
     spokes_y.clear()
 
-#######################################
-# THIS PLOTS THE CONVENTIONAL SUNPATH: SOLAR TIME
-#######################################
-
-rawhourlines_x = [[0 for i in range(24)] for j in range(7)]
-rawhourlines_y = [[0 for i in range(24)] for j in range(7)]
-finalhourlines_x = []
-finalhourlines_y = []
-
 for month in range (1,8):
-    rawhourlines_x.append([])
-    rawhourlines_y.append([])
     position=0
     day = SunpathDay_list[month-1]
     dec = declin_angle(day)
@@ -102,9 +91,6 @@ for month in range (1,8):
             sunpath_x.append((90-alt_list[position])*math.sin(azi_list[position]))
             sunpath_y.append((90-alt_list[position])*math.cos(azi_list[position]))
             
-            rawhourlines_x[month-1][hour-1] = (90-alt_list[position])*math.sin(azi_list[position])
-            rawhourlines_y[month-1][hour-1] = (90-alt_list[position])*math.cos(azi_list[position])
-            
         alt_list.append(solar_altitude(day,ss,lat,dec)*180/pi)    
         azi_list.append(solar_azimuth(day,ss,lat,solar_altitude(day,ss,lat,dec)*pi/180,dec))
         sunpath_x.append(90*math.sin(azi_list[position+1]))
@@ -116,54 +102,39 @@ for month in range (1,8):
             azi_list.append(solar_azimuth(day,hour,lat,alt_list[position]*pi/180,dec))
             sunpath_x.append((90-alt_list[position])*math.sin(azi_list[position]))
             sunpath_y.append((90-alt_list[position])*math.cos(azi_list[position]))
-            
-            rawhourlines_x[month-1][hour-1] = (90-alt_list[position])*math.sin(azi_list[position])
-            rawhourlines_y[month-1][hour-1] = (90-alt_list[position])*math.cos(azi_list[position])
             position=position+1
 
-    plt.plot(sunpath_x, sunpath_y, c=Colour_list[7-month], label = (Month_list[month-1]))
+    plt.plot(sunpath_x, sunpath_y, c=Colour_list[7-month], label = (Month_list[month-1]), marker='o')
     
     alt_list.clear()
     azi_list.clear()
     sunpath_x.clear()
     sunpath_y.clear()
 
-for i in range (0,24):
-    for j in range (0,7):
-        if rawhourlines_x[j][i]!=0:    
-            finalhourlines_x.append(rawhourlines_x[j][i])
-            finalhourlines_y.append(rawhourlines_y[j][i])
-    if ClockTime == False:
-        plt.plot(finalhourlines_x, finalhourlines_y, c='darkblue', marker='o')
-    finalhourlines_x.clear()
-    finalhourlines_y.clear()
-
-#######################################
-# THIS PLOTS THE CURVES FOR THE EQUATION OF TIME
-#######################################
-
-if ClockTime == True:
-    Equation_of_time_curve_x = []
-    Equation_of_time_curve_y = []
-    for hour in range (0,25):
-        for day in range(1,366):
-            #if the sun is below the horizon during the summer solstice for this hour then skip
-            if Hemisphere=="N":
-                summerday = 172
-            else:
-                summerday = 355
-            if solar_altitude(summerday,hour,lat,declin_angle(summerday))>0:
+Equation_of_time_curve_x = []
+Equation_of_time_curve_y = []
+for hour in range (0,25):
+    for day in range(1,366):
+        #if the sun is below the horizon during the summer solstice for this hour then skip
+        if Hemisphere=="N":
+            summerday = 172
+        else:
+            summerday = 355
+        if solar_altitude(summerday,hour,lat,declin_angle(summerday))>0:
+            #this controls whether solar time curves of the analemma are plotted
+            if ClockTime == True:
                 EqT = time_diff(day, EqTonly, 0, 0, 0)
-                Dec = declin_angle(day)
-                Solalt = solar_altitude(day,hour+EqT,lat, Dec)
-                if Solalt>0:
-                    Solaz = solar_azimuth(day,hour+EqT,lat,Solalt,Dec)
-                    Equation_of_time_curve_x.append((90-(Solalt*180/pi))*math.sin(Solaz))
-                    Equation_of_time_curve_y.append((90-(Solalt*180/pi))*math.cos(Solaz))
-        plt.plot(Equation_of_time_curve_x, Equation_of_time_curve_y, c='darkblue')
-        Equation_of_time_curve_x.clear()
-        Equation_of_time_curve_y.clear()
-
+            else:
+                EqT = 0
+            Dec = declin_angle(day)
+            Solalt = solar_altitude(day,hour+EqT,lat, Dec)
+            if Solalt>0:
+                Solaz = solar_azimuth(day,hour+EqT,lat,Solalt,Dec)
+                Equation_of_time_curve_x.append((90-(Solalt*180/pi))*math.sin(Solaz))
+                Equation_of_time_curve_y.append((90-(Solalt*180/pi))*math.cos(Solaz))
+    plt.plot(Equation_of_time_curve_x, Equation_of_time_curve_y, c='darkblue')
+    Equation_of_time_curve_x.clear()
+    Equation_of_time_curve_y.clear()
 #WEIRD PROBLEM: EQT FOR FIRST HOUR IN (ANT)ARCTIC CIRCLE ISN'T CORRECT (IT MIRRORS ABOUT THE HALF YEAR).
 
 
